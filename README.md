@@ -35,6 +35,12 @@ A decentralized event ticketing platform that leverages blockchain technology to
 6. **Royalties for Organizers** – Event creators earn a percentage from resold tickets.
 7. **User Profiles** – Users can view purchased tickets and transaction history.
 
+## 🔗 How These Contracts Work Together
+- **Event Creation**: Organizers use EventFactory to create events.
+- **Ticket Minting**: When users buy tickets, TicketNFT mints ERC-721 tokens.
+- **Resale Marketplace**: Users can list their NFT tickets on TicketMarketplace for resale.
+- **Ticket Verification**: At the event, TicketVerification confirms the ticket’s authenticity
+
 ## 📂 Folder Structure
 
 ```
