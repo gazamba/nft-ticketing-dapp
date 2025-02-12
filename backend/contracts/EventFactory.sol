@@ -28,4 +28,8 @@ contract EventFactory {
         emit EventCreated(nextEventId, _name, msg.sender);
         nextEventId++;
     }
+
+    function getNextEventId() external view returns (uint256) {
+        return nextEventId;
+    }
 }
