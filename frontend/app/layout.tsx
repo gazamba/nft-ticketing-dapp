@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
-import { ThemeProvider } from "./components/theme-provider";
-import { MainNav } from "./components/main-nav";
-import type React from "react";
+import MainNav from "@/components/main-nav";
+import Footer from "@/components/footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "NFT Ticketing System",
@@ -15,27 +17,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.className
-        )}
-      >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="relative flex min-h-screen flex-col">
-            <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container flex h-14 items-center">
-                <MainNav />
-              </div>
-            </header>
-            <div className="flex-1">{children}</div>
-          </div>
-        </ThemeProvider>
+      <body className={"${inter.variable} flex flex-col min-h-screen"}>
+        <MainNav />
+        <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );

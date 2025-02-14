@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "ticket-system-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,23 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-slot": "^1.1.2",
-    "@radix-ui/react-toast": "^1.2.6",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "ethers": "^6.13.5",
-    "lucide-react": "^0.475.0",
-    "next": "15.1.6",
-    "next-themes": "^0.4.4",
+    "next": "^15.1.7",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7",
-    "viem": "^2.22.23",
-    "wagmi": "^2.14.11"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -33,7 +19,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "15.1.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
