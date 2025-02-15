@@ -25,6 +25,7 @@ export default function RootLayout({
       <body className={"${inter.variable} flex flex-col min-h-screen"}>
         <MainNav />
         <main className="flex-1">{children}</main>
+        {/* TODO: container mx-auto or Container components */}
         <Footer />
       </body>
     </html>
