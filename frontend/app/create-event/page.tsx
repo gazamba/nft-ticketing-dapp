@@ -33,12 +33,11 @@ const eventSchema = z.object({
   location: z.string(),
   ticketPrice: z.coerce.number(),
   totalTickets: z.coerce.number(),
-  //TODO: check how to handle organizar adress when logged.
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
 
-const CreateEvent = () => {
+const CreateEventPage = () => {
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -180,4 +179,4 @@ const CreateEvent = () => {
   );
 };
 
-export default CreateEvent;
+export default CreateEventPage;

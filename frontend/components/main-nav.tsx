@@ -13,7 +13,6 @@ const MainNav = () => {
     {
       href: "/",
       label: "Home",
-      // TODO: highlight when click later..
     },
     { href: "/create-event", label: "Create Event" }, // restrict to only organizers
     { href: "/my-tickets", label: "My Tickets" },
