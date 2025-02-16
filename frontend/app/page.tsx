@@ -9,50 +9,46 @@ import {
 } from "@/components/ui/card";
 import Heading from "@/components/ui/heading";
 
-const cards = [
+const events = [
   {
     id: 1,
-    title: "Web 3 Conference",
+    name: "Web 3 Conference",
+    description: "A conference about the future of Web 3.0 technologies.",
     date: "2025-06-10",
     location: "Atlantis the Palm, Dubai",
-    description: "A conference about the future of Web 3.0 technologies.",
-    content:
-      "Join us for a deep dive into the world of decentralized technologies and blockchain.",
+    ticketPrice: 0.037, // ETH price
   },
   {
     id: 2,
-    title: "Blockchain Expo",
+    name: "Blockchain Expo",
+    description: "The leading blockchain expo in Europe.",
     date: "2025-07-15",
     location: "Olympia, London",
-    description: "The leading blockchain expo in Europe.",
-    content:
-      "Explore the latest advancements in blockchain technology and network with industry leaders.",
+    ticketPrice: 0.037, // ETH price
   },
   {
     id: 3,
-    title: "Crypto Summit",
+    name: "Crypto Summit",
+    description: "A summit for cryptocurrency enthusiasts and professionals.",
     date: "2025-08-20",
     location: "Marina Bay Sands, Singapore",
-    description: "A summit for cryptocurrency enthusiasts and professionals.",
-    content:
-      "Discuss the future of cryptocurrencies and their impact on the global economy.",
+    ticketPrice: 0.037, // ETH price
   },
   {
     id: 4,
-    title: "NFT Art Fair",
+    name: "NFT Art Fair",
+    description: "An art fair showcasing the latest in NFT art.",
     date: "2025-09-05",
     location: "Javits Center, New York",
-    description: "An art fair showcasing the latest in NFT art.",
-    content:
-      "Discover and purchase unique NFT artworks from artists around the world.",
+    ticketPrice: 0.03, // ETH price
   },
   {
     id: 5,
-    title: "DeFi Conference",
+    name: "DeFi Conference",
+    description: "A conference dedicated to decentralized finance.",
     date: "2025-10-12",
     location: "Palais des Congrès, Paris",
-    description: "A conference dedicated to decentralized finance.",
-    content: "Learn about the latest trends and innovations in the DeFi space.",
+    ticketPrice: 0.03, // ETH price
   },
 ];
 
@@ -61,10 +57,10 @@ export default function Home() {
     <div className="container mx-auto py-10">
       <Heading title="Upcoming Event" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cards.map((item) => (
+        {events.map((item) => (
           <Card key={item.id} className="">
             <CardHeader>
-              <CardTitle className="text-2xl">{item.title}</CardTitle>
+              <CardTitle className="text-2xl">{item.name}</CardTitle>
               <CardDescription>{item.date}</CardDescription>
             </CardHeader>
             <CardContent>

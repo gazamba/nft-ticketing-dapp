@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
-import { Lightbulb, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 const MainNav = () => {
   const pathname = usePathname();
@@ -23,7 +23,7 @@ const MainNav = () => {
   return (
     <nav className="p-6 h-20 border-b border-b-slate-300 flex items-center">
       <div className="p-4 mr-3 font-bold text-2xl">
-        <h2 className="">🎟️ NFT Ticketing dApp</h2>
+        <h2>🎟️ NFT Ticketing dApp</h2>
       </div>
       <ul className="flex items-center space-x-4 text-xl">
         {routes.map((item) => (
