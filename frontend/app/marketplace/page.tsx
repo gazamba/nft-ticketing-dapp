@@ -83,18 +83,17 @@ const MarketplacePage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="mt-2 text-muted-foreground">{item.location}</p>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <div>
-                  <p>Current price: </p>
-                  <p>{item.ticketPrice}</p>
+                  <p className="font-medium">Current price</p>
+                  <p className="font-bold text-3xl">{item.ticketPrice}</p>
                 </div>
-                <div>
-                  {" "}
-                  <p>Current price: </p>
+                <div className="text-muted-foreground">
+                  <p>Original price</p>
                   <p className="flex justify-end">{item.ticketPrice}</p>
                 </div>
               </div>
-              <p>Seller: 0x131...</p>
+              <p className="text-muted-foreground">Seller: 0x131...</p>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button className="w-full">Purchase Ticket Resale</Button>
