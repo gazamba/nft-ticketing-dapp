@@ -41,25 +41,6 @@ A decentralized event ticketing platform that leverages blockchain technology to
 - **Resale Marketplace**: Users can list their NFT tickets on TicketMarketplace for resale.
 - **Ticket Verification**: At the event, TicketVerification confirms the ticket’s authenticity
 
-## 📂 Folder Structure
-
-```
-nft-ticket-platform/
-├── frontend/               # Next.js app
-│   ├── public/
-│   ├── app/                # Folder structure base for pages
-│   ├── abis/               # Contract ABIs
-│   ├── wagmi.config.js     # Wagmi configuration
-│   └── package.json
-├── backend/                # Hardhat project
-│   ├── contracts/          # Smart contracts
-│   ├── scripts/            # Deployment scripts
-│   ├── test/               # Unit tests
-│   ├── hardhat.config.ts   # Hardhat configuration
-│   └── package.json
-└── .gitignore
-```
-
 ## 🛠 Setup and Installation
 
 ### **1️⃣ Clone the Repository**
