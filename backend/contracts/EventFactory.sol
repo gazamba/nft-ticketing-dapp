@@ -2,14 +2,19 @@
 pragma solidity ^0.8.20;
 
 contract EventFactory {
+
+    string[] public categories = [
+        "IT & Technology", "Music", "Festivals", "Sports", "Business & Entrepreneurship",
+        "Education & Learning", "Health & Wellness", "Arts & Culture", "Food & Beverage", "Science & Innovation",
+        "Gaming & eSports", "Finance & Investments", "Networking & Social", "Marketing & Advertising", "Nonprofit & Charity",
+        "Leadership & Development", "Sustainability & Environment", "Social Media & Digital Marketing", "Lifestyle & Fashion",
+        "Religious & Spiritual", "Travel & Adventure", "Automotive & Transportation", "Real Estate & Property",
+        "Public Sector & Government", "Other"
+    ];
+
     struct Event {
         uint256 eventId;
-        string name;
-        string description;
-        string date;
-        string location;
-        uint256 ticketPrice;
-        uint256 totalTickets;
+        string metadataCID;
         address organizer;
     }
 
@@ -18,33 +23,28 @@ contract EventFactory {
 
     event EventCreated(
         uint256 indexed eventId,
-        string name,
+        string metadataCID,
         address indexed organizer
     );
 
     function createEvent(
-        string memory _name,
-        string memory _description,
-        string memory _date,
-        string memory _location,
-        uint256 _ticketPrice,
-        uint256 _totalTickets
+        string memory _metadataCID,
+
     ) external {
         events[nextEventId] = Event(
             nextEventId,
-            _name,
-            _description,
-            _date,
-            _location,
-            _ticketPrice,
-            _totalTickets,
+            _metadataCID,
             msg.sender
         );
-        emit EventCreated(nextEventId, _name, msg.sender);
+        emit EventCreated(nextEventId, _metadataCID, msg.sender);
         nextEventId++;
     }
 
     function getNextEventId() external view returns (uint256) {
         return nextEventId;
+    }
+
+    function getCategories() external view returns (string[] memory) {
+        return categories;
     }
 }
