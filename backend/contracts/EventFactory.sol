@@ -53,7 +53,12 @@ contract EventFactory {
     );
     event EventCanceled(uint256 indexed eventId);
 
-    constructor(address _ticketSale) {
+    constructor() {}
+
+    function setTicketSale(address _ticketSale) external {
+        require(nextEventId == 0, "Can only set before events are created");
+        require(address(ticketSale) == address(0), "TicketSale already set");
+        require(_ticketSale != address(0), "Invalid address"); // Prevent setting to 0x0
         ticketSale = TicketSale(_ticketSale);
     }
 
@@ -64,6 +69,7 @@ contract EventFactory {
     ) external {
         require(_totalTickets > 0, "Total tickets must be greater than zero");
         require(_ticketPrice > 0, "Ticket price must be set");
+        require(address(ticketSale) != address(0), "TicketSale not set");
 
         events[nextEventId] = Event({
             eventId: nextEventId,
@@ -103,9 +109,28 @@ contract EventFactory {
 
     function getEventDetails(
         uint256 eventId
-    ) external view returns (Event memory) {
+    )
+        external
+        view
+        returns (
+            uint256 eventId_,
+            string memory metadataCID,
+            uint256 totalTickets,
+            uint256 soldTickets,
+            address organizer,
+            bool canceled
+        )
+    {
         require(eventId < nextEventId, "Event does not exist");
-        return events[eventId];
+        Event memory e = events[eventId];
+        return (
+            e.eventId,
+            e.metadataCID,
+            e.totalTickets,
+            e.soldTickets,
+            e.organizer,
+            e.canceled
+        );
     }
 
     function getAllCategories() external view returns (string[] memory) {

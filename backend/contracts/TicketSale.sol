@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Strings.sol"; // Import Strings library
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "./TicketNFT.sol";
 import "./interfaces/IEventFactory.sol";
 
@@ -29,7 +29,7 @@ contract TicketSale is ReentrancyGuard {
     }
 
     function setEventPrice(uint256 eventId, uint256 price) external {
-        (, , , address organizer, ) = eventFactory.getEventDetails(eventId);
+        (, , , , address organizer, ) = eventFactory.getEventDetails(eventId);
         require(msg.sender == organizer, "Only organizer");
         require(eventPrices[eventId] == 0, "Price already set");
         eventPrices[eventId] = price;
@@ -42,14 +42,17 @@ contract TicketSale is ReentrancyGuard {
     ) external payable nonReentrant {
         (
             uint256 id,
+            ,
             uint256 totalTickets,
             uint256 soldTickets,
-            address organizer,
+            ,
             bool canceled
         ) = eventFactory.getEventDetails(eventId);
+
         require(id == eventId, "Event does not exist");
         require(!canceled, "Event is canceled");
         require(soldTickets + amount <= totalTickets, "Not enough tickets");
+
         uint256 price = eventPrices[eventId];
         require(msg.value >= price * amount, "Insufficient payment");
 
@@ -74,7 +77,7 @@ contract TicketSale is ReentrancyGuard {
     }
 
     function claimRefund(uint256 eventId) external nonReentrant {
-        (, , , , bool canceled) = eventFactory.getEventDetails(eventId);
+        (, , , , , bool canceled) = eventFactory.getEventDetails(eventId);
         require(canceled, "Event not canceled");
         uint256 refundAmount = refunds[eventId][msg.sender];
         require(refundAmount > 0, "No refund available");
@@ -83,9 +86,5 @@ contract TicketSale is ReentrancyGuard {
         (bool sent, ) = msg.sender.call{value: refundAmount}("");
         require(sent, "Refund failed");
         emit RefundClaimed(eventId, msg.sender, refundAmount);
-    }
-
-    function uint2str(uint256 _i) internal pure returns (string memory) {
-        return Strings.toString(_i);
     }
 }

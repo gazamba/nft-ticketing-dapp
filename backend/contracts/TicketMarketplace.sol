@@ -12,23 +12,20 @@ contract TicketMarketplace is ReentrancyGuard {
     }
 
     mapping(uint256 => Listing) public listings;
-    IERC721 public ticketContract;
+    IERC721 public ticketNFT;
 
     event TicketListed(uint256 indexed ticketId, address seller, uint256 price);
     event TicketSold(uint256 indexed ticketId, address buyer);
 
-    constructor(address _ticketContract) {
-        ticketContract = IERC721(_ticketContract);
+    constructor(address _ticketNFT) {
+        ticketNFT = IERC721(_ticketNFT);
     }
 
     function listTicket(uint256 ticketId, uint256 price) external {
+        require(ticketNFT.ownerOf(ticketId) == msg.sender, "Not the owner");
         require(
-            ticketContract.ownerOf(ticketId) == msg.sender,
-            "Not the owner"
-        );
-        require(
-            ticketContract.getApproved(ticketId) == address(this) ||
-                ticketContract.isApprovedForAll(msg.sender, address(this)),
+            ticketNFT.getApproved(ticketId) == address(this) ||
+                ticketNFT.isApprovedForAll(msg.sender, address(this)),
             "Not approved"
         );
         listings[ticketId] = Listing(ticketId, msg.sender, price);
@@ -42,7 +39,7 @@ contract TicketMarketplace is ReentrancyGuard {
 
         (bool sent, ) = listing.seller.call{value: msg.value}("");
         require(sent, "Payment failed");
-        ticketContract.safeTransferFrom(listing.seller, msg.sender, ticketId);
+        ticketNFT.safeTransferFrom(listing.seller, msg.sender, ticketId);
 
         delete listings[ticketId];
         emit TicketSold(ticketId, msg.sender);

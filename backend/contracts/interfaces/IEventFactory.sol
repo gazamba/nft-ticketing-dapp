@@ -9,6 +9,7 @@ interface IEventFactory {
         view
         returns (
             uint256 eventId,
+            string memory metadataCID,
             uint256 totalTickets,
             uint256 soldTickets,
             address organizer,
