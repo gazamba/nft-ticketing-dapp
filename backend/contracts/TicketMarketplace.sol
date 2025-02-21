@@ -26,19 +26,25 @@ contract TicketMarketplace is ReentrancyGuard {
             ticketContract.ownerOf(ticketId) == msg.sender,
             "Not the owner"
         );
+        require(
+            ticketContract.getApproved(ticketId) == address(this) ||
+                ticketContract.isApprovedForAll(msg.sender, address(this)),
+            "Not approved"
+        );
         listings[ticketId] = Listing(ticketId, msg.sender, price);
         emit TicketListed(ticketId, msg.sender, price);
     }
 
     function buyTicket(uint256 ticketId) external payable nonReentrant {
         Listing memory listing = listings[ticketId];
+        require(listing.seller != address(0), "Ticket not listed");
         require(msg.value == listing.price, "Incorrect price");
 
-        payable(listing.seller).transfer(msg.value);
+        (bool sent, ) = listing.seller.call{value: msg.value}("");
+        require(sent, "Payment failed");
         ticketContract.safeTransferFrom(listing.seller, msg.sender, ticketId);
 
         delete listings[ticketId];
-
         emit TicketSold(ticketId, msg.sender);
     }
 }

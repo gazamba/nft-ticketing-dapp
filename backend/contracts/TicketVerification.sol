@@ -14,6 +14,10 @@ contract TicketVerification {
         uint256 ticketId,
         address owner
     ) external view returns (bool) {
-        return ticketContract.ownerOf(ticketId) == owner;
+        try ticketContract.ownerOf(ticketId) returns (address actualOwner) {
+            return actualOwner == owner;
+        } catch {
+            return false;
+        }
     }
 }
