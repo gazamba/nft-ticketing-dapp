@@ -84,7 +84,7 @@ cd backend
 npx hardhat compile
 
 Local blockchain with hardhat node
-npx hardhat ignition deploy ignition/modules/EventFactory.ts --network localhost
+npx hardhat ignition deploy ignition/modules/<contract-module>.ts --network localhost
 
 ```
 
@@ -114,6 +114,10 @@ const config: HardhatUserConfig = {
         : [],
       chainId: 11155111,
     },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 1337,
+    },
   },
 };
 
@@ -132,7 +136,7 @@ npx hardhat test
 
 Once tested, deploy the smart contracts on **Ethereum Sepolia**:
 ```sh
-npx hardhat ignition deploy ignition/modules/EventFactory.ts --network sepolia
+npx hardhat ignition deploy ignition/modules/<contract-modules>.ts --network sepolia
 ```
 
 For frontend deployment, use **Vercel**:
