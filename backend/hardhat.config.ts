@@ -12,6 +12,10 @@ const config: HardhatUserConfig = {
         : [],
       chainId: 11155111,
     },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
+    },
   },
 };
 
