@@ -16,7 +16,7 @@ A decentralized event ticketing platform that leverages blockchain technology to
 - **Smart Contracts** – Written in Solidity for ticket issuance and transactions.
 - **Hardhat** – For smart contract development, deployment, and testing.
 - **OpenZeppelin** – Secure contract development library.
-- **IPFS** – For storing event metadata (name, description, image, etc.).
+- **Pinata IPFS** – For storing event metadata (name, description, image, etc.).
 - **The Graph** – For querying blockchain data efficiently.
 
 ### **Blockchain**
@@ -67,13 +67,13 @@ Create a `.env` file inside `backend/` and `frontend/` with the following variab
 #### **Backend (`backend/.env`)**
 ```
 SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
-PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
+SEPOLIA_PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
 ```
 
 #### **Frontend (`frontend/.env.local`)**
 ```
-NEXT_PUBLIC_CONTRACT_ADDRESS=YOUR_DEPLOYED_CONTRACT_ADDRESS
-NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
+NEXT_PUBLIC_PINATA_PUBLIC_GATEWAY_URL=<Pinata-gateway>
+NEXT_PUBLIC_PINATA_JWT_TOKEN=<JWT-FROM-Pinata>
 ```
 
 ## 🚀 Running the Project
@@ -82,7 +82,10 @@ NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
 ```sh
 cd backend
 npx hardhat compile
-npx hardhat run scripts/deploy.js --network sepolia
+
+Local blockchain with hardhat node
+npx hardhat ignition deploy ignition/modules/EventFactory.ts --network localhost
+
 ```
 
 ### **2️⃣ Start the Frontend**
@@ -106,7 +109,10 @@ const config: HardhatUserConfig = {
   networks: {
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.SEPOLIA_PRIVATE_KEY
+        ? [process.env.SEPOLIA_PRIVATE_KEY]
+        : [],
+      chainId: 11155111,
     },
   },
 };
@@ -124,9 +130,9 @@ npx hardhat test
 
 ## 🌎 Deployment
 
-Once tested, deploy the smart contracts on **Ethereum Mainnet**:
+Once tested, deploy the smart contracts on **Ethereum Sepolia**:
 ```sh
-npx hardhat run scripts/deploy.js --network mainnet
+npx hardhat ignition deploy ignition/modules/EventFactory.ts --network sepolia
 ```
 
 For frontend deployment, use **Vercel**:
@@ -137,7 +143,7 @@ vercel
 
 ## 🔒 Security Considerations
 - Use **OpenZeppelin** libraries to prevent vulnerabilities.
-- Audit contracts before deploying to mainnet.
+- Audit contracts before deploying
 - Keep **private keys** secure and never expose them in code.
 
 ## 📜 License
