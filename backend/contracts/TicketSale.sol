@@ -37,8 +37,7 @@ contract TicketSale is ReentrancyGuard {
 
     function buyTickets(
         uint256 eventId,
-        uint256 amount,
-        string memory ticketMetadataBaseURI
+        uint256 amount
     ) external payable nonReentrant {
         (
             uint256 id,
@@ -48,6 +47,8 @@ contract TicketSale is ReentrancyGuard {
             ,
             bool canceled
         ) = eventFactory.getEventDetails(eventId);
+        string memory ticketNFTMetadataBaseURI = eventFactory
+            .getTicketMetadataBaseURI(eventId);
 
         require(id == eventId, "Event does not exist");
         require(!canceled, "Event is canceled");
@@ -59,7 +60,7 @@ contract TicketSale is ReentrancyGuard {
         for (uint256 i = 0; i < amount; i++) {
             string memory tokenURI = string(
                 abi.encodePacked(
-                    ticketMetadataBaseURI,
+                    ticketNFTMetadataBaseURI,
                     "/",
                     Strings.toString(soldTickets + i + 1)
                 )

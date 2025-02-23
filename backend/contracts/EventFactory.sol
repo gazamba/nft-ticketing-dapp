@@ -35,6 +35,7 @@ contract EventFactory {
     struct Event {
         uint256 eventId;
         string metadataCID;
+        string ticketNFTMetadataBaseURI;
         uint256 totalTickets;
         uint256 soldTickets;
         address organizer;
@@ -48,6 +49,7 @@ contract EventFactory {
     event EventCreated(
         uint256 indexed eventId,
         string metadataCID,
+        string ticketNFTMetadataBaseURI,
         uint256 totalTickets,
         address indexed organizer
     );
@@ -64,16 +66,22 @@ contract EventFactory {
 
     function createEvent(
         string memory _metadataCID,
+        string memory _ticketNFTMetadataBaseURI,
         uint256 _totalTickets,
         uint256 _ticketPrice
     ) external {
         require(_totalTickets > 0, "Total tickets must be greater than zero");
         require(_ticketPrice > 0, "Ticket price must be set");
         require(address(ticketSale) != address(0), "TicketSale not set");
+        require(
+            bytes(_ticketNFTMetadataBaseURI).length > 0,
+            "Ticket URI required"
+        );
 
         events[nextEventId] = Event({
             eventId: nextEventId,
             metadataCID: _metadataCID,
+            ticketNFTMetadataBaseURI: _ticketNFTMetadataBaseURI,
             totalTickets: _totalTickets,
             soldTickets: 0,
             organizer: msg.sender,
@@ -81,7 +89,13 @@ contract EventFactory {
         });
 
         ticketSale.setEventPrice(nextEventId, _ticketPrice);
-        emit EventCreated(nextEventId, _metadataCID, _totalTickets, msg.sender);
+        emit EventCreated(
+            nextEventId,
+            _metadataCID,
+            _ticketNFTMetadataBaseURI,
+            _totalTickets,
+            msg.sender
+        );
         nextEventId++;
     }
 
@@ -131,6 +145,13 @@ contract EventFactory {
             e.organizer,
             e.canceled
         );
+    }
+
+    function getTicketMetadataBaseURI(
+        uint256 eventId
+    ) external view returns (string memory) {
+        require(eventId < nextEventId, "Event does not exist");
+        return events[eventId].ticketNFTMetadataBaseURI;
     }
 
     function getAllCategories() external view returns (string[] memory) {
