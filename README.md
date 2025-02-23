@@ -16,7 +16,7 @@ A decentralized event ticketing platform that leverages blockchain technology to
 - **Smart Contracts** – Written in Solidity for ticket issuance and transactions.
 - **Hardhat** – For smart contract development, deployment, and testing.
 - **OpenZeppelin** – Secure contract development library.
-- **IPFS** – For storing event metadata (name, description, image, etc.).
+- **Pinata IPFS** – For storing event metadata (name, description, image, etc.).
 - **The Graph** – For querying blockchain data efficiently.
 
 ### **Blockchain**
@@ -32,14 +32,14 @@ A decentralized event ticketing platform that leverages blockchain technology to
 3. **Ticket Purchase** – Users can buy tickets using ETH, and NFTs are transferred to their wallets.
 4. **Resale Marketplace** – Users can resell tickets in a decentralized manner with royalties for event organizers.
 5. **Ticket Verification** – Organizers can verify ticket ownership at event entry.
-6. **Royalties for Organizers** – Event creators earn a percentage from resold tickets.
 7. **User Profiles** – Users can view purchased tickets and transaction history.
 
 ## 🔗 How These Contracts Work Together
-- **Event Creation**: Organizers use EventFactory to create events.
-- **Ticket Minting**: When users buy tickets, TicketNFT mints ERC-721 tokens.
-- **Resale Marketplace**: Users can list their NFT tickets on TicketMarketplace for resale.
-- **Ticket Verification**: At the event, TicketVerification confirms the ticket’s authenticity
+- **EventFactory**: Manages event creation, cancellation, and tracking.
+- **TicketNFT**: Mints and manages NFT tickets tied to events.
+- **TicketSale**: Handles ticket purchases and refunds, integrating with EventFactory and TicketNFT.
+- **TicketVerification**: Verifies ownership of NFT tickets.
+- **TicketMarketplace**: Allows secondary market trading of NFT tickets.
 
 ## 🛠 Setup and Installation
 
@@ -67,13 +67,13 @@ Create a `.env` file inside `backend/` and `frontend/` with the following variab
 #### **Backend (`backend/.env`)**
 ```
 SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
-PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
+SEPOLIA_PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
 ```
 
 #### **Frontend (`frontend/.env.local`)**
 ```
-NEXT_PUBLIC_CONTRACT_ADDRESS=YOUR_DEPLOYED_CONTRACT_ADDRESS
-NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
+NEXT_PUBLIC_PINATA_PUBLIC_GATEWAY_URL=<Pinata-gateway>
+NEXT_PUBLIC_PINATA_JWT_TOKEN=<JWT-FROM-Pinata>
 ```
 
 ## 🚀 Running the Project
@@ -82,7 +82,10 @@ NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
 ```sh
 cd backend
 npx hardhat compile
-npx hardhat run scripts/deploy.js --network sepolia
+
+Local blockchain with hardhat node
+npx hardhat ignition deploy ignition/modules/<contract-module>.ts --network localhost
+
 ```
 
 ### **2️⃣ Start the Frontend**
@@ -106,7 +109,14 @@ const config: HardhatUserConfig = {
   networks: {
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.SEPOLIA_PRIVATE_KEY
+        ? [process.env.SEPOLIA_PRIVATE_KEY]
+        : [],
+      chainId: 11155111,
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
     },
   },
 };
@@ -124,9 +134,9 @@ npx hardhat test
 
 ## 🌎 Deployment
 
-Once tested, deploy the smart contracts on **Ethereum Mainnet**:
+Once tested, deploy the smart contracts on **Ethereum Sepolia**:
 ```sh
-npx hardhat run scripts/deploy.js --network mainnet
+npx hardhat ignition deploy ignition/modules/<contract-modules>.ts --network sepolia
 ```
 
 For frontend deployment, use **Vercel**:
@@ -137,7 +147,7 @@ vercel
 
 ## 🔒 Security Considerations
 - Use **OpenZeppelin** libraries to prevent vulnerabilities.
-- Audit contracts before deploying to mainnet.
+- Audit contracts before deploying
 - Keep **private keys** secure and never expose them in code.
 
 ## 📜 License
