@@ -25,15 +25,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
-
-const eventSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().min(3, "Name must be at least 3 characters"),
-  date: z.date(),
-  location: z.string(),
-  ticketPrice: z.coerce.number(),
-  totalTickets: z.coerce.number(),
-});
+import { eventSchema } from "@/validationSchemas";
 
 type EventFormData = z.infer<typeof eventSchema>;
 
