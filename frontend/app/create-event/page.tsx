@@ -26,10 +26,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { eventSchema } from "@/validationSchemas";
+import { usePathname } from "next/navigation";
+import axios from "axios";
 
 type EventFormData = z.infer<typeof eventSchema>;
 
 const CreateEventPage = () => {
+  const currentPath = usePathname();
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -43,7 +46,19 @@ const CreateEventPage = () => {
   });
 
   const onSubmit = (data: EventFormData) => {
+    // first create event smart contract to get the eventId
+    try {
+    } catch (error) {}
+    //second, call api to create event metadata json to IPFS
+    // bind json form data with event Id to POST
+
+    try {
+      axios.post(`${currentPath}/event-metadata`);
+    } catch (error) {}
+    // add toast messages
     console.log("Form data: ", data);
+    // console.log("Event Id: ", data.id);
+    // console.log("Event Date: ", data.date);
     form.reset();
   };
 
@@ -59,11 +74,7 @@ const CreateEventPage = () => {
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Enter the description"
-                    className="resize-none"
-                    {...field}
-                  />
+                  <Input placeholder="Enter the name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -76,7 +87,7 @@ const CreateEventPage = () => {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter the description" {...field} />
+                  <Textarea placeholder="Enter the description" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
