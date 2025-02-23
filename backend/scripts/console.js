@@ -19,11 +19,11 @@ async function main() {
   // Mint Ticket NFT
   const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
   const addressTo = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-  const 
+  const tokenURI = ""
 
-  address to,
-  string memory tokenURI,
-  uint256 eventId
+  // address to,
+  // string memory tokenURI,
+  // uint256 eventId
 
 }
 

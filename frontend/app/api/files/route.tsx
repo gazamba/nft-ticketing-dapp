@@ -12,16 +12,6 @@ export async function POST(request: NextRequest) {
     // const uploadData = await pinata.upload.file(file);
     // const url = await pinata.gateways.convert(uploadData.IpfsHash);
 
-    // Metadata Event
-    // {
-    //   id: 1,
-    //   name: "Web 3 Conference",
-    //   description: "A conference about the future of Web 3.0 technologies.",
-    //   date: "Friday, June 10, 2025",
-    //   location: "Atlantis the Palm, Dubai",
-    //   ticketPrice: 0.037, // ETH price
-    // },
-
     // Two files to created a folder is required.
     const file1 = new File([JSON.stringify({ name: "" })], "1.json", {
       type: "application/json",
