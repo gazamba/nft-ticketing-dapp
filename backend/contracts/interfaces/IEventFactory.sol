@@ -17,4 +17,8 @@ interface IEventFactory {
         );
 
     function updateSoldTickets(uint256 eventId, uint256 amount) external;
+
+    function getTicketMetadataBaseURI(
+        uint256 eventId
+    ) external view returns (string memory);
 }
