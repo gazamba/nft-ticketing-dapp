@@ -93,7 +93,7 @@ const MarketplacePage = () => {
                   <p className="flex justify-end">{item.ticketPrice}</p>
                 </div>
               </div>
-              <p className="text-muted-foreground">Seller: 0x131...</p>
+              <p className="text-muted-foreground">Seller: 0x131...1234</p>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button className="w-full">Purchase Ticket Resale</Button>
