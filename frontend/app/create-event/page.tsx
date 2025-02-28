@@ -28,10 +28,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { eventSchema } from "@/validationSchemas";
 import { usePathname } from "next/navigation";
 import axios from "axios";
+import { useAccount } from "wagmi";
+import toast from "react-hot-toast";
 
 type EventFormData = z.infer<typeof eventSchema>;
 
 const CreateEventPage = () => {
+  const { isConnected } = useAccount();
   const currentPath = usePathname();
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -46,20 +49,26 @@ const CreateEventPage = () => {
   });
 
   const onSubmit = (data: EventFormData) => {
-    // first create event smart contract to get the eventId
-    try {
-    } catch (error) {}
-    //second, call api to create event metadata json to IPFS
-    // bind json form data with event Id to POST
+    if (!isConnected) {
+      toast.error("Please, connect your wallet to proceed.");
+    } else {
+      // first create event smart contract to get the eventId
 
-    try {
-      axios.post(`${currentPath}/event-metadata`);
-    } catch (error) {}
-    // add toast messages
-    console.log("Form data: ", data);
-    // console.log("Event Id: ", data.id);
-    // console.log("Event Date: ", data.date);
-    form.reset();
+      try {
+      } catch (error) {}
+
+      //second, call api to create event metadata json to IPFS
+      // bind json form data with event Id to POST
+
+      try {
+        axios.post(`${currentPath}/event-metadata`);
+      } catch (error) {}
+      // add toast messages
+      console.log("Form data: ", data);
+      // console.log("Event Id: ", data.id);
+      // console.log("Event Date: ", data.date);
+      form.reset();
+    }
   };
 
   return (
