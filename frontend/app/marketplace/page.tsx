@@ -37,6 +37,14 @@ const MarketplacePage = () => {
       location: "Olympia, London",
       ticketPrice: 0.037, // ETH price
     },
+    {
+      id: 3,
+      name: "Blockchain Expo 3",
+      description: "The leading blockchain expo in Europe.",
+      date: "October, July 14, 2023",
+      location: "Olympia, London",
+      ticketPrice: 0.037, // ETH price
+    },
   ];
 
   useEffect(() => {
