@@ -23,7 +23,7 @@ const NavBar = () => {
 
   return (
     <nav className="p-6 h-20 border-b border-b-slate-300 flex items-center">
-      <div className="p-4 mr-3 font-bold text-2xl">
+      <div className="mr-3 font-bold text-2xl">
         <Link href={`/`}>
           <h2>🎟️ NFT Ticketing dApp</h2>
         </Link>
