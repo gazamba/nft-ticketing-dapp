@@ -29,8 +29,7 @@ contract TicketSale is ReentrancyGuard {
     }
 
     function setEventPrice(uint256 eventId, uint256 price) external {
-        (, , , , address organizer, ) = eventFactory.getEventDetails(eventId);
-        require(msg.sender == organizer, "Only organizer");
+        require(msg.sender == address(eventFactory), "Only EventFactory");
         require(eventPrices[eventId] == 0, "Price already set");
         eventPrices[eventId] = price;
     }

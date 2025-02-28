@@ -77,9 +77,9 @@ contract EventFactory {
             bytes(_ticketNFTMetadataBaseURI).length > 0,
             "Ticket URI required"
         );
-
+        uint256 eventId = nextEventId;
         events[nextEventId] = Event({
-            eventId: nextEventId,
+            eventId: eventId,
             metadataCID: _metadataCID,
             ticketNFTMetadataBaseURI: _ticketNFTMetadataBaseURI,
             totalTickets: _totalTickets,
@@ -88,15 +88,15 @@ contract EventFactory {
             canceled: false
         });
 
-        ticketSale.setEventPrice(nextEventId, _ticketPrice);
+        nextEventId++;
+        ticketSale.setEventPrice(eventId, _ticketPrice);
         emit EventCreated(
-            nextEventId,
+            eventId,
             _metadataCID,
             _ticketNFTMetadataBaseURI,
             _totalTickets,
             msg.sender
         );
-        nextEventId++;
     }
 
     function cancelEvent(uint256 eventId) external {
