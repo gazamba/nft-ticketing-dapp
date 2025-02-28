@@ -1,12 +1,13 @@
 "use client";
 
-import { WagmiProvider, createConfig, http, useClient } from "wagmi";
+import { WagmiProvider, createConfig, http } from "wagmi";
 import { sepolia, localhost } from "wagmi/chains";
 import { metaMask } from "@wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NavBar from "./navbar";
 import Footer from "./footer";
 import { useEffect, useState } from "react";
+import ToastProvider from "@/components/toast-provider";
 
 const config = createConfig({
   chains: [sepolia, localhost],
@@ -34,6 +35,7 @@ export default function ClientWrapper({
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
+        <ToastProvider />
         <NavBar />
         {children}
         <Footer />
