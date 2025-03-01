@@ -1,0 +1,171 @@
+[
+  { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "eventId",
+        "type": "uint256"
+      }
+    ],
+    "name": "EventCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "eventId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metadataCID",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "ticketNFTMetadataBaseURI",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalTickets",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "organizer",
+        "type": "address"
+      }
+    ],
+    "name": "EventCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "eventId", "type": "uint256" }
+    ],
+    "name": "cancelEvent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "categories",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "_metadataCID", "type": "string" },
+      {
+        "internalType": "string",
+        "name": "_ticketNFTMetadataBaseURI",
+        "type": "string"
+      },
+      { "internalType": "uint256", "name": "_totalTickets", "type": "uint256" },
+      { "internalType": "uint256", "name": "_ticketPrice", "type": "uint256" }
+    ],
+    "name": "createEvent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "events",
+    "outputs": [
+      { "internalType": "uint256", "name": "eventId", "type": "uint256" },
+      { "internalType": "string", "name": "metadataCID", "type": "string" },
+      {
+        "internalType": "string",
+        "name": "ticketNFTMetadataBaseURI",
+        "type": "string"
+      },
+      { "internalType": "uint256", "name": "totalTickets", "type": "uint256" },
+      { "internalType": "uint256", "name": "soldTickets", "type": "uint256" },
+      { "internalType": "address", "name": "organizer", "type": "address" },
+      { "internalType": "bool", "name": "canceled", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllCategories",
+    "outputs": [{ "internalType": "string[]", "name": "", "type": "string[]" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "eventId", "type": "uint256" }
+    ],
+    "name": "getEventDetails",
+    "outputs": [
+      { "internalType": "uint256", "name": "eventId_", "type": "uint256" },
+      { "internalType": "string", "name": "metadataCID", "type": "string" },
+      { "internalType": "uint256", "name": "totalTickets", "type": "uint256" },
+      { "internalType": "uint256", "name": "soldTickets", "type": "uint256" },
+      { "internalType": "address", "name": "organizer", "type": "address" },
+      { "internalType": "bool", "name": "canceled", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "eventId", "type": "uint256" }
+    ],
+    "name": "getTicketMetadataBaseURI",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextEventId",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_ticketSale", "type": "address" }
+    ],
+    "name": "setTicketSale",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ticketSale",
+    "outputs": [
+      { "internalType": "contract TicketSale", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "eventId", "type": "uint256" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "updateSoldTickets",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

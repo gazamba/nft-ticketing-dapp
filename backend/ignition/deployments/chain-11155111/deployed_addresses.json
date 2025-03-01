@@ -1,0 +1,7 @@
+{
+  "EventFactoryModule#EventFactory": "0x782517184e0e0240c244d73C7DF7b5f33D00f0Aa",
+  "TicketNFTModule#TicketNFT": "0xc82F41225da517827D00a1Ca0A4467556b18850c",
+  "TicketMarketplaceModule#TicketMarketplace": "0x24Fc021B574989E79CE11AC9E945Fb6e6950221a",
+  "TicketSaleModule#TicketSale": "0xB59c861C3205BA789F735710fD8f209f5eb228B4",
+  "TicketVerification#TicketVerification": "0x2b7C8bC8036d677C3b556e355DC1F5847D3297BF"
+}

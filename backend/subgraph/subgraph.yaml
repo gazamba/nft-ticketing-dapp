@@ -1,0 +1,29 @@
+specVersion: 1.2.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: EventFactory
+    network: sepolia
+    source:
+      address: "0x782517184e0e0240c244d73C7DF7b5f33D00f0Aa"
+      abi: EventFactory
+      startBlock: 7806068
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - EventCanceled
+        - EventCreated
+      abis:
+        - name: EventFactory
+          file: ./abis/EventFactory.json
+      eventHandlers:
+        - event: EventCanceled(indexed uint256)
+          handler: handleEventCanceled
+        - event: EventCreated(indexed uint256,string,string,uint256,indexed address)
+          handler: handleEventCreated
+      file: ./src/event-factory.ts

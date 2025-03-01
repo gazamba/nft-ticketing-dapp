@@ -1,0 +1,8 @@
+{
+  "sepolia": {
+    "EventFactory": {
+      "address": "0x782517184e0e0240c244d73C7DF7b5f33D00f0Aa",
+      "startBlock": 7806068
+    }
+  }
+}
