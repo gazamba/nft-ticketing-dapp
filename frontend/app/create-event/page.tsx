@@ -28,14 +28,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { eventSchema } from "@/validationSchemas";
 import { usePathname } from "next/navigation";
 import axios from "axios";
-import { useAccount } from "wagmi";
+import {
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import toast from "react-hot-toast";
+import { SUBGRAPH_URL, EVENT_QUERY } from "@/lib/queries";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { parseEventLogs } from "viem";
+import EventFactoryABI from "@/../backend/artifacts/contracts/EventFactory.sol/EventFactory.json";
+import { request } from "graphql-request";
 
 type EventFormData = z.infer<typeof eventSchema>;
 
 const CreateEventPage = () => {
   const { isConnected } = useAccount();
   const currentPath = usePathname();
+  const { writeContract, data: hash, error: writeError } = useWriteContract();
+  const { data: receipt, isLoading: isPending } = useWaitForTransactionReceipt({
+    hash,
+  });
+
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -46,6 +60,42 @@ const CreateEventPage = () => {
       ticketPrice: 0,
       totalTickets: 0,
     },
+  });
+
+  const { mutate: uploadData, isPending: isUploading } = useMutation({
+    mutationFn: async (data: EventFormData & { eventId: string }) => {
+      const response = await axios.post(`${currentPath}/api/event-metadata`, {
+        eventId: data.eventId,
+        name: data.name,
+        description: data.description,
+        date: data.date?.toISOString(),
+        location: data.location,
+        ticketPrice: data.ticketPrice,
+        totalTickets: data.totalTickets,
+      });
+      return response.data.cid;
+    },
+    onSuccess: (cid) => toast.success(`Metadata uploaded to IFPS: ${cid}`),
+    onError: (error) => toast.error(`Metadata upload failed: ${error.message}`),
+  });
+
+  const { data: graphEvent, refetch: refetchGraphEvent } = useQuery({
+    queryKey: ["eventCreated", receipt?.transactionHash], // CHECK IF eventCreated should be EventCreated
+    queryFn: async () => {
+      if (!receipt) return null;
+      const events = parseEventLogs({
+        abi: EventFactoryABI.abi,
+        logs: receipt.logs,
+      });
+
+      const createdEvent = events.find((e) => e.eventName === "EventCreated");
+      if (!createdEvent) return null;
+      const eventId = createdEvent.args.eventId.toString();
+      const data = await request(SUBGRAPH_URL, EVENT_QUERY, { eventId });
+      return data.eventCreated[0];
+    },
+    enabled: !!receipt,
+    staleTime: 60 * 1000,
   });
 
   const onSubmit = (data: EventFormData) => {
