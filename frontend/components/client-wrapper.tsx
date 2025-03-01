@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NavBar from "./navbar";
 import Footer from "./footer";
 import { useEffect, useState } from "react";
-import ToastProvider from "@/components/toast-provider";
+import ToastProvider from "@/components/providers/toast-provider";
 
 const config = createConfig({
   chains: [sepolia, localhost],
