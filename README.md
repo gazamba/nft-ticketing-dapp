@@ -66,8 +66,9 @@ Create a `.env` file inside `backend/` and `frontend/` with the following variab
 
 #### **Backend (`backend/.env`)**
 ```
-SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
-SEPOLIA_PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
+INFURA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
+INFURA_PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
+ETHERSCAN_API_KEY=YOUR_ETHERSCAN_API_KEY
 ```
 
 #### **Frontend (`frontend/.env.local`)**
@@ -96,34 +97,6 @@ npm run dev  # or yarn dev
 
 The application will be available at: `http://localhost:3000`
 
-## 📝 Hardhat Configuration (`backend/hardhat.config.ts`)
-
-```typescript
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import dotenv from "dotenv";
-dotenv.config();
-
-const config: HardhatUserConfig = {
-  solidity: "0.8.28",
-  networks: {
-    sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "",
-      accounts: process.env.SEPOLIA_PRIVATE_KEY
-        ? [process.env.SEPOLIA_PRIVATE_KEY]
-        : [],
-      chainId: 11155111,
-    },
-    localhost: {
-      url: "http://127.0.0.1:8545",
-      chainId: 31337,
-    },
-  },
-};
-
-export default config;
-```
-
 ## 🧪 Running Tests
 
 To run unit tests for your smart contracts:
@@ -136,13 +109,7 @@ npx hardhat test
 
 Once tested, deploy the smart contracts on **Ethereum Sepolia**:
 ```sh
-npx hardhat ignition deploy ignition/modules/<contract-modules>.ts --network sepolia
-```
-
-For frontend deployment, use **Vercel**:
-```sh
-cd frontend
-vercel
+npx hardhat ignition deploy ./ignition/modules/FullDeployment.ts --network sepolia
 ```
 
 ## 🔒 Security Considerations
