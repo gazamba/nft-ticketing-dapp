@@ -73,8 +73,9 @@ ETHERSCAN_API_KEY=YOUR_ETHERSCAN_API_KEY
 
 #### **Frontend (`frontend/.env.local`)**
 ```
-NEXT_PUBLIC_PINATA_PUBLIC_GATEWAY_URL=<Pinata-gateway>
-NEXT_PUBLIC_PINATA_JWT_TOKEN=<JWT-FROM-Pinata>
+PINATA_PUBLIC_GATEWAY_URL=<Pinata-gateway>
+PINATA_JWT_TOKEN=<JWT-FROM-Pinata>
+INFURA_RPC_URL=
 ```
 
 ## 🚀 Running the Project
