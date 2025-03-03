@@ -71,10 +71,25 @@ const CreateEventPage = () => {
     defaultValues: {
       name: "",
       description: "",
+      // category -> CHECK HOW TO ADDD CATEGORY FROM SELECT
       date: undefined,
       location: "",
       ticketPrice: 0,
       totalTickets: 0,
+    },
+  });
+
+  const { mutate: createGroup, data: group } = useMutation({
+    mutationFn: async (data: EventFormData) => {
+      const response = await axios.post(`/api/groups`, {
+        name: `${data.name} ${nextEventId}`,
+      });
+      return response.data.group;
+    },
+    onSuccess: (group) => console.log(`Group created: ${group}`),
+    onError: (error) => {
+      console.error(`Failed to create group: ${error.message}`);
+      toast.error(`Something went wrong`);
     },
   });
 
@@ -84,18 +99,23 @@ const CreateEventPage = () => {
     data: cid,
   } = useMutation({
     mutationFn: async (data: EventFormData) => {
-      const response = await axios.post(`/api/event-metadata`, {
+      const response = await axios.post(`/api/events/${nextEventId}/metadata`, {
+        eventId: Number(nextEventId),
         name: data.name,
         description: data.description,
         date: data.date.toISOString(),
         location: data.location,
         ticketPrice: Number(data.ticketPrice),
         totalTickets: Number(data.totalTickets),
+        pinataGroupId: group.id,
       });
       return response.data.cid;
     },
-    onSuccess: (cid) => toast.success(`Metadata uploaded to IFPS: ${cid}`),
-    onError: (error) => toast.error(`Metadata upload failed: ${error.message}`),
+    onSuccess: (cid) => console.log(`Metadata uploaded to IPFS: ${cid}`),
+    onError: (error) => {
+      console.error(`Metadata upload failed: ${error.message}`);
+      toast.error(`Something went wrong`);
+    },
   });
 
   const { refetch: refetchGraphEvent } = useQuery({
@@ -123,26 +143,30 @@ const CreateEventPage = () => {
     }
 
     if (!nextEventId) {
-      toast.error("Failed to fetch next event ID");
+      console.error("Failed to fetch next event ID");
+      toast.error("Something went wrong");
       return;
     }
 
-    toast.loading("Uploading metadata...", { id: "metadata" });
-    const eventId = Number(nextEventId);
-    uploadMetadata({ ...data, eventId });
+    console.log("Creating group...");
+    createGroup(data);
+
+    console.log("Uploading metadata...");
+    uploadMetadata(data);
 
     useEffect(() => {
       if (cid) {
-        toast.dismiss("metadata");
+        console.log("Creating event on blockchain...");
         toast.loading("Creating event on blockchain...", { id: "tx" });
-        const data = form.getValues();
+        // const data = form.getValues(); CONFIRM IF IT'S NOT NEEDED ANYMORE
         writeContract({
           address: eventFactoryAddress,
           abi: EventFactoryArtifact.abi,
           functionName: "createEvent",
           args: [
             cid,
-            "ipfs://event-metada-uri",
+            group.id,
+            //  <PENDING CATEGORY STRING>,
             data.totalTickets,
             ethers.parseEther(data.ticketPrice.toString()),
           ],
