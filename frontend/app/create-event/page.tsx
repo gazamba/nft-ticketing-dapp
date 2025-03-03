@@ -1,7 +1,7 @@
 "use client";
 
 import Heading from "@/components/ui/heading";
-import React from "react";
+import { useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,28 +26,44 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { eventSchema } from "@/validationSchemas";
-import { usePathname } from "next/navigation";
 import axios from "axios";
 import {
   useAccount,
   useWaitForTransactionReceipt,
   useWriteContract,
+  useReadContract,
 } from "wagmi";
 import toast from "react-hot-toast";
 import { SUBGRAPH_URL, EVENT_QUERY } from "@/lib/queries";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { parseEventLogs } from "viem";
-import EventFactoryABI from "@/../backend/artifacts/contracts/EventFactory.sol/EventFactory.json";
+import EventFactoryArtifact from "@/../backend/artifacts/contracts/EventFactory.sol/EventFactory.json";
+import deployedAddresses from "@/../backend/ignition/deployments/chain-11155111/deployed_addresses.json";
 import { request } from "graphql-request";
+import { ethers } from "ethers";
 
 type EventFormData = z.infer<typeof eventSchema>;
 
+const eventFactoryAddress = deployedAddresses[
+  "EventFactoryModule#EventFactory"
+] as `0x${string}`;
+
 const CreateEventPage = () => {
   const { isConnected } = useAccount();
-  const currentPath = usePathname();
-  const { writeContract, data: hash, error: writeError } = useWriteContract();
+  const {
+    writeContract,
+    data: hash,
+    error: writeError,
+    isPending: isTxPending,
+  } = useWriteContract();
   const { data: receipt, isLoading: isPending } = useWaitForTransactionReceipt({
     hash,
+  });
+
+  const { data: nextEventId, isLoading: isNextIdLoading } = useReadContract({
+    address: eventFactoryAddress,
+    abi: EventFactoryArtifact.abi,
+    functionName: "nextEventId",
   });
 
   const form = useForm<EventFormData>({
@@ -62,16 +78,19 @@ const CreateEventPage = () => {
     },
   });
 
-  const { mutate: uploadData, isPending: isUploading } = useMutation({
-    mutationFn: async (data: EventFormData & { eventId: string }) => {
-      const response = await axios.post(`${currentPath}/api/event-metadata`, {
-        eventId: data.eventId,
+  const {
+    mutate: uploadMetadata,
+    isPending: isUploading,
+    data: cid,
+  } = useMutation({
+    mutationFn: async (data: EventFormData) => {
+      const response = await axios.post(`/api/event-metadata`, {
         name: data.name,
         description: data.description,
-        date: data.date?.toISOString(),
+        date: data.date.toISOString(),
         location: data.location,
-        ticketPrice: data.ticketPrice,
-        totalTickets: data.totalTickets,
+        ticketPrice: Number(data.ticketPrice),
+        totalTickets: Number(data.totalTickets),
       });
       return response.data.cid;
     },
@@ -79,47 +98,88 @@ const CreateEventPage = () => {
     onError: (error) => toast.error(`Metadata upload failed: ${error.message}`),
   });
 
-  const { data: graphEvent, refetch: refetchGraphEvent } = useQuery({
-    queryKey: ["eventCreated", receipt?.transactionHash], // CHECK IF eventCreated should be EventCreated
+  const { refetch: refetchGraphEvent } = useQuery({
+    queryKey: ["eventCreated", receipt?.transactionHash],
     queryFn: async () => {
       if (!receipt) return null;
-      const events = parseEventLogs({
-        abi: EventFactoryABI.abi,
+      const createdEvent = parseEventLogs({
+        abi: EventFactoryArtifact.abi,
+        eventName: "EventCreated",
         logs: receipt.logs,
-      });
-
-      const createdEvent = events.find((e) => e.eventName === "EventCreated");
+      })[0];
       if (!createdEvent) return null;
-      const eventId = createdEvent.args.eventId.toString();
+      const eventId = (createdEvent as any).args.eventId.toString();
       const data = await request(SUBGRAPH_URL, EVENT_QUERY, { eventId });
-      return data.eventCreated[0];
+      return (data as { eventCreateds: any[] }).eventCreateds[0];
     },
-    enabled: !!receipt,
+    enabled: false,
     staleTime: 60 * 1000,
   });
 
   const onSubmit = (data: EventFormData) => {
     if (!isConnected) {
       toast.error("Please, connect your wallet to proceed.");
-    } else {
-      // first create event smart contract to get the eventId
-
-      try {
-      } catch (error) {}
-
-      //second, call api to create event metadata json to IPFS
-      // bind json form data with event Id to POST
-
-      try {
-        axios.post(`${currentPath}/event-metadata`);
-      } catch (error) {}
-      // add toast messages
-      console.log("Form data: ", data);
-      // console.log("Event Id: ", data.id);
-      // console.log("Event Date: ", data.date);
-      form.reset();
+      return;
     }
+
+    if (!nextEventId) {
+      toast.error("Failed to fetch next event ID");
+      return;
+    }
+
+    toast.loading("Uploading metadata...", { id: "metadata" });
+    const eventId = Number(nextEventId);
+    uploadMetadata({ ...data, eventId });
+
+    useEffect(() => {
+      if (cid) {
+        toast.dismiss("metadata");
+        toast.loading("Creating event on blockchain...", { id: "tx" });
+        const data = form.getValues();
+        writeContract({
+          address: eventFactoryAddress,
+          abi: EventFactoryArtifact.abi,
+          functionName: "createEvent",
+          args: [
+            cid,
+            "ipfs://event-metada-uri",
+            data.totalTickets,
+            ethers.parseEther(data.ticketPrice.toString()),
+          ],
+        });
+      }
+    }, [cid, writeContract, form]);
+
+    form.reset();
   };
+
+  useEffect(() => {
+    if (isTxPending) toast.loading("Transaction pending...", { id: "tx" });
+  }, [isTxPending]);
+
+  useEffect(() => {
+    if (receipt) {
+      toast.dismiss("tx");
+      const createdEvent = parseEventLogs({
+        abi: EventFactoryArtifact.abi,
+        eventName: "EventCreated",
+        logs: receipt.logs,
+      })[0];
+
+      if (createdEvent) {
+        const eventId = (createdEvent as any).args.eventId.toString();
+        toast.success(`Event created with ID: ${eventId}`);
+        uploadMetadata({ ...form.getValues(), eventId });
+        refetchGraphEvent();
+      } else {
+        toast.error("EventCreated not found in receipt logs");
+      }
+    }
+    if (writeError) {
+      toast.dismiss("tx");
+      toast.error(`Event creation failed: ${writeError.message}`);
+    }
+  }, [receipt, writeError, form, uploadMetadata, refetchGraphEvent]);
 
   return (
     <div className="container mx-auto py-10">
@@ -232,8 +292,16 @@ const CreateEventPage = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" size="lg">
-            Create Event
+          <Button
+            type="submit"
+            size="lg"
+            disabled={
+              isNextIdLoading || isTxPending || isPending || isUploading
+            }
+          >
+            {isNextIdLoading || isTxPending || isPending || isUploading
+              ? "Processing..."
+              : "Create Event"}
           </Button>
         </form>
       </Form>
