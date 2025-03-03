@@ -9,8 +9,7 @@ import "./interfaces/IEventFactory.sol";
 contract TicketSale is ReentrancyGuard {
     TicketNFT public ticketNFT;
     IEventFactory public eventFactory;
-    mapping(uint256 => uint256) public eventPrices;
-    mapping(uint256 => mapping(address => uint256)) public refunds;
+    mapping(uint256 => mapping(address => uint256[])) public purchasedTickets;
 
     event TicketPurchased(
         uint256 indexed eventId,
@@ -30,8 +29,6 @@ contract TicketSale is ReentrancyGuard {
 
     function setEventPrice(uint256 eventId, uint256 price) external {
         require(msg.sender == address(eventFactory), "Only EventFactory");
-        require(eventPrices[eventId] == 0, "Price already set");
-        eventPrices[eventId] = price;
     }
 
     function buyTickets(
@@ -41,20 +38,20 @@ contract TicketSale is ReentrancyGuard {
         (
             uint256 id,
             ,
+            string memory ticketNFTMetadataBaseURI,
+            ,
             uint256 totalTickets,
             uint256 soldTickets,
+            uint256 price,
             ,
             bool canceled
         ) = eventFactory.getEventDetails(eventId);
-        string memory ticketNFTMetadataBaseURI = eventFactory
-            .getTicketMetadataBaseURI(eventId);
-
         require(id == eventId, "Event does not exist");
         require(!canceled, "Event is canceled");
         require(soldTickets + amount <= totalTickets, "Not enough tickets");
 
-        uint256 price = eventPrices[eventId];
-        require(msg.value >= price * amount, "Insufficient payment");
+        uint256 totalCost = price * amount;
+        require(msg.value >= totalCost, "Insufficient payment");
 
         for (uint256 i = 0; i < amount; i++) {
             string memory tokenURI = string(
@@ -69,20 +66,28 @@ contract TicketSale is ReentrancyGuard {
                 tokenURI,
                 eventId
             );
+            purchasedTickets[eventId][msg.sender].push(tokenId);
             emit TicketPurchased(eventId, msg.sender, tokenId);
         }
 
         eventFactory.updateSoldTickets(eventId, amount);
-        refunds[eventId][msg.sender] += msg.value;
+        if (msg.value > totalCost) {
+            (bool sent, ) = msg.sender.call{value: msg.value - totalCost}("");
+            require(sent, "Refund failed");
+        }
     }
 
     function claimRefund(uint256 eventId) external nonReentrant {
-        (, , , , , bool canceled) = eventFactory.getEventDetails(eventId);
+        (uint256 id, , , , , , uint256 price, , bool canceled) = eventFactory
+            .getEventDetails(eventId);
+        require(id == eventId, "Event does not exist");
         require(canceled, "Event not canceled");
-        uint256 refundAmount = refunds[eventId][msg.sender];
+
+        uint256[] storage ticketIds = purchasedTickets[eventId][msg.sender];
+        uint256 refundAmount = ticketIds.length * price;
         require(refundAmount > 0, "No refund available");
 
-        refunds[eventId][msg.sender] = 0;
+        delete purchasedTickets[eventId][msg.sender];
         (bool sent, ) = msg.sender.call{value: refundAmount}("");
         require(sent, "Refund failed");
         emit RefundClaimed(eventId, msg.sender, refundAmount);

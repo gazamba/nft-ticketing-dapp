@@ -10,8 +10,11 @@ interface IEventFactory {
         returns (
             uint256 eventId,
             string memory metadataCID,
+            string memory pinataGroupId,
+            string memory category,
             uint256 totalTickets,
             uint256 soldTickets,
+            uint256 ticketPrice,
             address organizer,
             bool canceled
         );

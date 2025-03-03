@@ -3,16 +3,22 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IEventFactory.sol";
 
 contract TicketNFT is ERC721URIStorage, Ownable {
     uint256 private nextTokenId;
     mapping(uint256 => uint256) public tokenToEventId;
     address public ticketSale;
+    IEventFactory public eventFactory;
 
-    constructor() ERC721("EventTicket", "ETK") Ownable(msg.sender) {}
+    constructor(
+        address _eventFactory
+    ) ERC721("EventTicket", "ETK") Ownable(msg.sender) {
+        eventFactory = IEventFactory(_eventFactory);
+    }
 
     function setTicketSale(address _ticketSale) external onlyOwner {
-        require(ticketSale == address(0), "TicketSale already set");
+        require(_ticketSale != address(0), "Invalid address");
         ticketSale = _ticketSale;
     }
 
@@ -22,11 +28,16 @@ contract TicketNFT is ERC721URIStorage, Ownable {
         uint256 eventId
     ) external returns (uint256) {
         require(msg.sender == ticketSale, "Only TicketSale");
+        (, , , , , , , , bool canceled) = eventFactory.getEventDetails(eventId);
+        require(!canceled, "Event canceled");
+
         uint256 tokenId = nextTokenId;
         _mint(to, tokenId);
         _setTokenURI(tokenId, tokenURI);
         tokenToEventId[tokenId] = eventId;
-        nextTokenId++;
+        unchecked {
+            nextTokenId++;
+        }
         return tokenId;
     }
 

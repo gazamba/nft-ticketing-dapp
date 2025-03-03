@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./TicketSale.sol";
 
-contract EventFactory {
+contract EventFactory is Ownable {
     string[] public categories = [
         "IT & Technology",
         "Music",
@@ -35,9 +36,11 @@ contract EventFactory {
     struct Event {
         uint256 eventId;
         string metadataCID;
-        string ticketNFTMetadataBaseURI;
+        string pinataGroupId;
+        string category;
         uint256 totalTickets;
         uint256 soldTickets;
+        uint256 ticketPrice;
         address organizer;
         bool canceled;
     }
@@ -49,24 +52,24 @@ contract EventFactory {
     event EventCreated(
         uint256 indexed eventId,
         string metadataCID,
-        string ticketNFTMetadataBaseURI,
+        string pinataGroupId,
+        string category,
         uint256 totalTickets,
         address indexed organizer
     );
     event EventCanceled(uint256 indexed eventId);
 
-    constructor() {}
+    constructor() Ownable(msg.sender) {}
 
-    function setTicketSale(address _ticketSale) external {
-        require(nextEventId == 0, "Can only set before events are created");
-        require(address(ticketSale) == address(0), "TicketSale already set");
-        require(_ticketSale != address(0), "Invalid address"); // Prevent setting to 0x0
+    function setTicketSale(address _ticketSale) external onlyOwner {
+        require(_ticketSale != address(0), "Invalid address");
         ticketSale = TicketSale(_ticketSale);
     }
 
     function createEvent(
         string memory _metadataCID,
-        string memory _ticketNFTMetadataBaseURI,
+        string memory _pinataGroupId,
+        string memory _category,
         uint256 _totalTickets,
         uint256 _ticketPrice
     ) external {
@@ -74,16 +77,19 @@ contract EventFactory {
         require(_ticketPrice > 0, "Ticket price must be set");
         require(address(ticketSale) != address(0), "TicketSale not set");
         require(
-            bytes(_ticketNFTMetadataBaseURI).length > 0,
-            "Ticket URI required"
+            bytes(_pinataGroupId).length > 0,
+            "Pinata Group Id is required"
         );
+
         uint256 eventId = nextEventId;
-        events[nextEventId] = Event({
+        events[eventId] = Event({
             eventId: eventId,
             metadataCID: _metadataCID,
-            ticketNFTMetadataBaseURI: _ticketNFTMetadataBaseURI,
+            pinataGroupId: _pinataGroupId,
+            category: _category,
             totalTickets: _totalTickets,
             soldTickets: 0,
+            ticketPrice: _ticketPrice,
             organizer: msg.sender,
             canceled: false
         });
@@ -93,7 +99,8 @@ contract EventFactory {
         emit EventCreated(
             eventId,
             _metadataCID,
-            _ticketNFTMetadataBaseURI,
+            _pinataGroupId,
+            _category,
             _totalTickets,
             msg.sender
         );
@@ -129,8 +136,11 @@ contract EventFactory {
         returns (
             uint256 eventId_,
             string memory metadataCID,
+            string memory pinataGroupId,
+            string memory category,
             uint256 totalTickets,
             uint256 soldTickets,
+            uint256 ticketPrice,
             address organizer,
             bool canceled
         )
@@ -140,8 +150,11 @@ contract EventFactory {
         return (
             e.eventId,
             e.metadataCID,
+            e.pinataGroupId,
+            e.category,
             e.totalTickets,
             e.soldTickets,
+            e.ticketPrice,
             e.organizer,
             e.canceled
         );
@@ -151,7 +164,7 @@ contract EventFactory {
         uint256 eventId
     ) external view returns (string memory) {
         require(eventId < nextEventId, "Event does not exist");
-        return events[eventId].ticketNFTMetadataBaseURI;
+        return events[eventId].pinataGroupId;
     }
 
     function getAllCategories() external view returns (string[] memory) {
