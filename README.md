@@ -2,7 +2,8 @@
 
 A decentralized event ticketing platform that leverages blockchain technology to issue NFT-based tickets, ensuring transparency, security, and ownership.
 
-== MISSING SNAPSHOTS AND DEPLOY LINK FOR THE dApp ==
+### 🚧 **Project Status: In Development** 🚧
+This project is currently a work in progress. Features and functionality may change as development continues.
 
 ## 🚀 Tech Stack
 
@@ -70,7 +71,7 @@ INFURA_PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
 ETHERSCAN_API_KEY=YOUR_ETHERSCAN_API_KEY
 ```
 
-#### **Frontend (`frontend/.env.local`)**
+#### **Frontend (`frontend/.env`)**
 ```
 PINATA_PUBLIC_GATEWAY_URL=<Pinata-gateway>
 PINATA_JWT_TOKEN=<JWT-FROM-Pinata>
