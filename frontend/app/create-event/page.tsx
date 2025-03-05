@@ -41,6 +41,13 @@ import EventFactoryArtifact from "@/../backend/artifacts/contracts/EventFactory.
 import deployedAddresses from "@/../backend/ignition/deployments/chain-11155111/deployed_addresses.json";
 import { request } from "graphql-request";
 import { ethers } from "ethers";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type EventFormData = z.infer<typeof eventSchema>;
 
@@ -66,12 +73,20 @@ const CreateEventPage = () => {
     functionName: "nextEventId",
   });
 
+  const { data, isLoading: isLoadingCategories } = useReadContract({
+    address: eventFactoryAddress,
+    abi: EventFactoryArtifact.abi,
+    functionName: "getAllCategories",
+  });
+
+  const categories = (data as string[]) || undefined;
+
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       name: "",
       description: "",
-      // category -> CHECK HOW TO ADDD CATEGORY FROM SELECT
+      category: "",
       date: undefined,
       location: "",
       ticketPrice: 0,
@@ -79,7 +94,11 @@ const CreateEventPage = () => {
     },
   });
 
-  const { mutate: createGroup, data: group } = useMutation({
+  const {
+    mutate: createGroup,
+    isPending: isCreatingGroup,
+    data: group,
+  } = useMutation({
     mutationFn: async (data: EventFormData) => {
       const response = await axios.post(`/api/groups`, {
         name: `${data.name} ${nextEventId}`,
@@ -103,6 +122,7 @@ const CreateEventPage = () => {
         eventId: Number(nextEventId),
         name: data.name,
         description: data.description,
+        category: data.category,
         date: data.date.toISOString(),
         location: data.location,
         ticketPrice: Number(data.ticketPrice),
@@ -166,7 +186,7 @@ const CreateEventPage = () => {
           args: [
             cid,
             group.id,
-            //  <PENDING CATEGORY STRING>,
+            data.category,
             data.totalTickets,
             ethers.parseEther(data.ticketPrice.toString()),
           ],
@@ -232,6 +252,33 @@ const CreateEventPage = () => {
                 <FormControl>
                   <Textarea placeholder="Enter the description" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {categories?.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -320,10 +367,20 @@ const CreateEventPage = () => {
             type="submit"
             size="lg"
             disabled={
-              isNextIdLoading || isTxPending || isPending || isUploading
+              isLoadingCategories ||
+              isCreatingGroup ||
+              isNextIdLoading ||
+              isTxPending ||
+              isPending ||
+              isUploading
             }
           >
-            {isNextIdLoading || isTxPending || isPending || isUploading
+            {isLoadingCategories ||
+            isCreatingGroup ||
+            isNextIdLoading ||
+            isTxPending ||
+            isPending ||
+            isUploading
               ? "Processing..."
               : "Create Event"}
           </Button>
