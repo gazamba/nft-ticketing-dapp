@@ -2,7 +2,8 @@
 
 A decentralized event ticketing platform that leverages blockchain technology to issue NFT-based tickets, ensuring transparency, security, and ownership.
 
-== MISSING SNAPSHOTS AND DEPLOY LINK FOR THE dApp ==
+### 🚧 **Project Status: In Development** 🚧
+This project is currently a work in progress. Features and functionality may change as development continues.
 
 ## 🚀 Tech Stack
 
@@ -30,9 +31,8 @@ A decentralized event ticketing platform that leverages blockchain technology to
 1. **NFT-Based Tickets** – Each ticket is minted as an NFT, ensuring ownership and uniqueness.
 2. **Event Creation** – Organizers can create events, set ticket prices, and ticket supply.
 3. **Ticket Purchase** – Users can buy tickets using ETH, and NFTs are transferred to their wallets.
-4. **Resale Marketplace** – Users can resell tickets in a decentralized manner with royalties for event organizers.
+4. **Resale Marketplace** – Users can resell tickets in a decentralized manner.
 5. **Ticket Verification** – Organizers can verify ticket ownership at event entry.
-7. **User Profiles** – Users can view purchased tickets and transaction history.
 
 ## 🔗 How These Contracts Work Together
 - **EventFactory**: Manages event creation, cancellation, and tracking.
@@ -71,11 +71,11 @@ INFURA_PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
 ETHERSCAN_API_KEY=YOUR_ETHERSCAN_API_KEY
 ```
 
-#### **Frontend (`frontend/.env.local`)**
+#### **Frontend (`frontend/.env`)**
 ```
 PINATA_PUBLIC_GATEWAY_URL=<Pinata-gateway>
 PINATA_JWT_TOKEN=<JWT-FROM-Pinata>
-INFURA_RPC_URL=
+INFURA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY
 ```
 
 ## 🚀 Running the Project
