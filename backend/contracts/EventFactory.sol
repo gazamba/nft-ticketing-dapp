@@ -43,9 +43,10 @@ contract EventFactory is Ownable {
         uint256 ticketPrice;
         address organizer;
         bool canceled;
+        mapping(uint256 => string) ticketCIDs;
     }
 
-    uint256 public nextEventId;
+    uint256 public nextEventId = 1;
     mapping(uint256 => Event) public events;
     TicketSale public ticketSale;
 
@@ -58,6 +59,11 @@ contract EventFactory is Ownable {
         address indexed organizer
     );
     event EventCanceled(uint256 indexed eventId);
+    event TicketCIDsAdded(
+        uint256 indexed eventId,
+        uint256[] tokenIds,
+        string[] cids
+    );
 
     constructor() Ownable(msg.sender) {}
 
@@ -71,31 +77,43 @@ contract EventFactory is Ownable {
         string memory _pinataGroupId,
         string memory _category,
         uint256 _totalTickets,
-        uint256 _ticketPrice
+        uint256 _ticketPrice,
+        uint256[] memory tokenIds,
+        string[] memory ticketCIDs
     ) external {
         require(_totalTickets > 0, "Total tickets must be greater than zero");
         require(_ticketPrice > 0, "Ticket price must be set");
         require(address(ticketSale) != address(0), "TicketSale not set");
         require(
             bytes(_pinataGroupId).length > 0,
-            "Pinata Group Id is required"
+            "Pinata group id must be set"
+        );
+        require(
+            tokenIds.length == ticketCIDs.length,
+            "Token IDs and CIDs must match"
+        );
+        require(
+            tokenIds.length == _totalTickets,
+            "Must provide CIDs for all tickets"
         );
 
         uint256 eventId = nextEventId;
-        events[eventId] = Event({
-            eventId: eventId,
-            metadataCID: _metadataCID,
-            pinataGroupId: _pinataGroupId,
-            category: _category,
-            totalTickets: _totalTickets,
-            soldTickets: 0,
-            ticketPrice: _ticketPrice,
-            organizer: msg.sender,
-            canceled: false
-        });
+        Event storage newEvent = events[eventId];
+        newEvent.eventId = eventId;
+        newEvent.metadataCID = _metadataCID;
+        newEvent.pinataGroupId = _pinataGroupId;
+        newEvent.category = _category;
+        newEvent.totalTickets = _totalTickets;
+        newEvent.soldTickets = 0;
+        newEvent.ticketPrice = _ticketPrice;
+        newEvent.organizer = msg.sender;
+        newEvent.canceled = false;
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            newEvent.ticketCIDs[tokenIds[i]] = ticketCIDs[i];
+        }
 
         nextEventId++;
-        ticketSale.setEventPrice(eventId, _ticketPrice);
         emit EventCreated(
             eventId,
             _metadataCID,
@@ -160,11 +178,17 @@ contract EventFactory is Ownable {
         );
     }
 
-    function getTicketMetadataBaseURI(
-        uint256 eventId
-    ) external view returns (string memory) {
+    function isValidTicketCID(
+        uint256 eventId,
+        uint256 tokenId,
+        string memory cid
+    ) external view returns (bool) {
         require(eventId < nextEventId, "Event does not exist");
-        return events[eventId].pinataGroupId;
+        string memory expectedCID = events[eventId].ticketCIDs[tokenId];
+        return
+            keccak256(abi.encodePacked(cid)) ==
+            keccak256(abi.encodePacked(expectedCID)) &&
+            bytes(expectedCID).length > 0;
     }
 
     function getAllCategories() external view returns (string[] memory) {

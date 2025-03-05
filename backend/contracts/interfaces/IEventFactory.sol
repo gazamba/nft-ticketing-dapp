@@ -9,7 +9,7 @@ interface IEventFactory {
         view
         returns (
             uint256 eventId,
-            string memory metadataCID,
+            string memory eventMetadataCID,
             string memory pinataGroupId,
             string memory category,
             uint256 totalTickets,
@@ -21,7 +21,9 @@ interface IEventFactory {
 
     function updateSoldTickets(uint256 eventId, uint256 amount) external;
 
-    function getTicketMetadataBaseURI(
-        uint256 eventId
-    ) external view returns (string memory);
+    function isValidTicketCID(
+        uint256 eventId,
+        uint256 tokenId,
+        string memory cid
+    ) external view returns (bool);
 }

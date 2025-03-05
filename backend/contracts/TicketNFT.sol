@@ -4,11 +4,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IEventFactory.sol";
+import "./TicketSale.sol";
 
 contract TicketNFT is ERC721URIStorage, Ownable {
-    uint256 private nextTokenId;
     mapping(uint256 => uint256) public tokenToEventId;
-    address public ticketSale;
+    mapping(uint256 => bool) public ticketUsed;
+    TicketSale public ticketSale;
     IEventFactory public eventFactory;
 
     constructor(
@@ -19,30 +20,61 @@ contract TicketNFT is ERC721URIStorage, Ownable {
 
     function setTicketSale(address _ticketSale) external onlyOwner {
         require(_ticketSale != address(0), "Invalid address");
-        ticketSale = _ticketSale;
+        ticketSale = TicketSale(_ticketSale);
     }
 
     function mintTicket(
         address to,
-        string memory tokenURI,
-        uint256 eventId
+        uint256 tokenId,
+        uint256 eventId,
+        string memory tokenCID
     ) external returns (uint256) {
-        require(msg.sender == ticketSale, "Only TicketSale");
+        require(msg.sender == address(ticketSale), "Only TicketSale");
         (, , , , , , , , bool canceled) = eventFactory.getEventDetails(eventId);
         require(!canceled, "Event canceled");
+        require(!exists(tokenId), "Token already minted");
+        require(
+            eventFactory.isValidTicketCID(eventId, tokenId, tokenCID),
+            "Invalid CID for tokenId"
+        );
 
-        uint256 tokenId = nextTokenId;
         _mint(to, tokenId);
-        _setTokenURI(tokenId, tokenURI);
+        _setTokenURI(tokenId, tokenCID);
         tokenToEventId[tokenId] = eventId;
-        unchecked {
-            nextTokenId++;
-        }
+        ticketUsed[tokenId] = false;
         return tokenId;
     }
 
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _ownerOf(tokenId) != address(0); // Use _ownerOf from ERC721
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        require(exists(tokenId), "ERC721: URI query for nonexistent token");
+        string memory cid = super.tokenURI(tokenId);
+        return string(abi.encodePacked(ticketSale.getPinataBaseURI(), cid));
+    }
+
+    function verifyTicket(
+        uint256 tokenId,
+        address owner
+    ) external view returns (bool) {
+        require(exists(tokenId), "Ticket does not exist");
+        uint256 eventId = tokenToEventId[tokenId];
+        (, , , , , , , , bool canceled) = eventFactory.getEventDetails(eventId);
+        return ownerOf(tokenId) == owner && !ticketUsed[tokenId] && !canceled;
+    }
+
+    function markTicketUsed(uint256 tokenId) external onlyOwner {
+        require(exists(tokenId), "Ticket does not exist");
+        require(!ticketUsed[tokenId], "Ticket already used");
+        ticketUsed[tokenId] = true;
+    }
+
     function getEventId(uint256 tokenId) external view returns (uint256) {
-        require(ownerOf(tokenId) != address(0), "Token does not exist");
+        require(exists(tokenId), "Token does not exist");
         return tokenToEventId[tokenId];
     }
 }
