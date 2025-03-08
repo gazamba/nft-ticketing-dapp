@@ -59,11 +59,6 @@ contract EventFactory is Ownable {
         address indexed organizer
     );
     event EventCanceled(uint256 indexed eventId);
-    event TicketCIDsAdded(
-        uint256 indexed eventId,
-        uint256[] tokenIds,
-        string[] cids
-    );
 
     constructor() Ownable(msg.sender) {}
 
@@ -164,7 +159,7 @@ contract EventFactory is Ownable {
         )
     {
         require(eventId < nextEventId, "Event does not exist");
-        Event memory e = events[eventId];
+        Event storage e = events[eventId];
         return (
             e.eventId,
             e.metadataCID,
