@@ -6,8 +6,15 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { eventId: string } }
 ) {
-  const { tickets, pinataGroupId } = await req.json();
-  // const {tickets} = ticketNFTSchema.array().parse(body)
+  const body = await req.json();
+  const validation = ticketNFTSchema.array().safeParse(body);
+
+  if (!validation.success) {
+    return NextResponse.json(validation.error.errors, { status: 400 });
+  }
+
+  const { tickets, pinataGroupId } = body;
+
   try {
     const ticketCIDs = [];
     for (const ticket of tickets) {
