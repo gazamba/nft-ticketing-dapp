@@ -17,6 +17,11 @@ export const eventSchema = eventFormSchema.extend({
 });
 
 export const ticketNFTSchema = z.object({
-  tokenId: z.number().min(1, "Token ID must be greater than 0"),
-  name: z.string().min(1, "Name is required").max(255).optional(),
+  tickets: z.array(
+    z.object({
+      tokenId: z.number().min(1, "Token ID must be greater than 0"),
+      name: z.string().min(1, "Name is required").max(255).optional(),
+    })
+  ),
+  pinataGroupId: z.string().optional(),
 });
