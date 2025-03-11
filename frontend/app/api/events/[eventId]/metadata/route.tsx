@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pinata } from "@/utils/config";
-import { eventSchema } from "@/validationSchemas";
+import { eventFormSchema } from "@/validationSchemas";
 
 // /api/events/{eventId}/metadata req: eventSchema
 export async function POST(
@@ -13,22 +13,39 @@ export async function POST(
     }
 
     const body = await request.json();
+    const {
+      name,
+      description,
+      category,
+      date,
+      location,
+      ticketPrice,
+      totalTickets,
+      pinataGroupId,
+    } = body;
 
-    const metadata = { eventId: params.eventId, ...body };
+    const metadata = {
+      name,
+      description,
+      category,
+      date,
+      location,
+      ticketPrice,
+      totalTickets,
+    };
 
-    // const validation = eventSchema.safeParse(body);
+    const validation = eventFormSchema.safeParse(body);
 
-    // if (!validation.success) {
-    //   return NextResponse.json(validation.error.errors, { status: 400 });
-    // }
+    if (!validation.success) {
+      return NextResponse.json(validation.error.errors, { status: 400 });
+    }
 
     const upload = await pinata.upload
       .json(metadata)
       .addMetadata({
         name: `event-${params.eventId}.json`,
       })
-      // .group("PENDING GET GROUP FROM /API/GROUP"); // TODO: get id correctly for event
-      .group("565f8482-546b-46e6-b322-57a4c41833a4"); // TODO:
+      .group(pinataGroupId);
 
     const cid = await pinata.gateways.convert(upload.IpfsHash);
 
