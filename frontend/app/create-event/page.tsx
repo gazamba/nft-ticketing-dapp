@@ -25,7 +25,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
-import { eventSchema } from "@/validationSchemas";
+import {
+  eventFormSchema,
+  eventSchema,
+  ticketNFTSchema,
+} from "@/validationSchemas";
 import axios from "axios";
 import {
   useAccount,
@@ -49,7 +53,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type EventFormData = z.infer<typeof eventSchema>;
+type EventFormData = z.infer<typeof eventFormSchema>;
+
+type EventData = z.infer<typeof eventSchema>;
 
 const eventFactoryAddress = deployedAddresses[
   "EventFactoryModule#EventFactory"
@@ -82,7 +88,7 @@ const CreateEventPage = () => {
   const categories = (data as string[]) || undefined;
 
   const form = useForm<EventFormData>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(eventFormSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -113,13 +119,12 @@ const CreateEventPage = () => {
   });
 
   const {
-    mutate: uploadMetadata,
+    mutate: uploadEventMetadata,
     isPending: isUploading,
-    data: cid,
+    data: metadataCID,
   } = useMutation({
     mutationFn: async (data: EventFormData) => {
       const response = await axios.post(`/api/events/${nextEventId}/metadata`, {
-        eventId: Number(nextEventId),
         name: data.name,
         description: data.description,
         category: data.category,
@@ -135,6 +140,27 @@ const CreateEventPage = () => {
     onError: (error) => {
       console.error(`Metadata upload failed: ${error.message}`);
       toast.error(`Something went wrong`);
+    },
+  });
+
+  const {
+    mutate: createTicketMetadata,
+    isPending: isCreatingTicketMetadata,
+    data: ticketCIDs,
+  } = useMutation({
+    mutationFn: async ({
+      tickets,
+    }: {
+      tickets: { tokenId: number; name: string }[];
+    }) => {
+      const response = await axios.post(
+        `/api/events/${nextEventId}/tickets/metadata`,
+        {
+          tickets: tickets,
+          pinataGroupId: group.id,
+        }
+      );
+      return response.data;
     },
   });
 
@@ -156,7 +182,7 @@ const CreateEventPage = () => {
     staleTime: 60 * 1000,
   });
 
-  const onSubmit = (data: EventFormData) => {
+  const onSubmit = (data: EventData) => {
     if (!isConnected) {
       toast.error("Please, connect your wallet to proceed.");
       return;
@@ -172,10 +198,18 @@ const CreateEventPage = () => {
     createGroup(data);
 
     console.log("Uploading metadata...");
-    uploadMetadata(data);
+    uploadEventMetadata(data);
+
+    const tokenIds = Array.from({ length: data.totalTickets }, (_, i) => i + 1);
+    const tickets = tokenIds.map((tokenId) => ({
+      tokenId,
+      name: `${data.name} Event #${nextEventId} Ticket #${tokenId}`,
+    }));
+    createTicketMetadata({ tickets });
+    console.log("Uploading ticket(s) metadata...");
 
     useEffect(() => {
-      if (cid) {
+      if (metadataCID) {
         console.log("Creating event on blockchain...");
         toast.loading("Creating event on blockchain...", { id: "tx" });
         // const data = form.getValues(); CONFIRM IF IT'S NOT NEEDED ANYMORE
@@ -184,15 +218,17 @@ const CreateEventPage = () => {
           abi: EventFactoryArtifact.abi,
           functionName: "createEvent",
           args: [
-            cid,
-            group.id,
+            metadataCID,
+            data.pinataGroupId,
             data.category,
             data.totalTickets,
             ethers.parseEther(data.ticketPrice.toString()),
+            tokenIds,
+            ticketCIDs,
           ],
         });
       }
-    }, [cid, writeContract, form]);
+    }, [metadataCID, writeContract, form]);
 
     form.reset();
   };
@@ -213,7 +249,7 @@ const CreateEventPage = () => {
       if (createdEvent) {
         const eventId = (createdEvent as any).args.eventId.toString();
         toast.success(`Event created with ID: ${eventId}`);
-        uploadMetadata({ ...form.getValues(), eventId });
+        uploadEventMetadata({ ...form.getValues() });
         refetchGraphEvent();
       } else {
         toast.error("EventCreated not found in receipt logs");
@@ -223,7 +259,7 @@ const CreateEventPage = () => {
       toast.dismiss("tx");
       toast.error(`Event creation failed: ${writeError.message}`);
     }
-  }, [receipt, writeError, form, uploadMetadata, refetchGraphEvent]);
+  }, [receipt, writeError, form, uploadEventMetadata, refetchGraphEvent]);
 
   return (
     <div className="container mx-auto py-10">
