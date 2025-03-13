@@ -1,7 +1,6 @@
 "use client";
 
 import Heading from "@/components/ui/heading";
-import { useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,11 +24,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  eventFormSchema,
-  eventSchema,
-  ticketNFTSchema,
-} from "@/validationSchemas";
+import { eventFormSchema } from "@/validationSchemas";
 import axios from "axios";
 import {
   useAccount,
@@ -55,8 +50,6 @@ import {
 
 type EventFormData = z.infer<typeof eventFormSchema>;
 
-type EventData = z.infer<typeof eventSchema>;
-
 const eventFactoryAddress = deployedAddresses[
   "EventFactoryModule#EventFactory"
 ] as `0x${string}`;
@@ -73,19 +66,20 @@ const CreateEventPage = () => {
     hash,
   });
 
-  const { data: nextEventId, isLoading: isNextIdLoading } = useReadContract({
+  const { data: nextEventIdRaw, isLoading: isNextIdLoading } = useReadContract({
     address: eventFactoryAddress,
     abi: EventFactoryArtifact.abi,
     functionName: "nextEventId",
   });
+  const nextEventId = nextEventIdRaw ? Number(nextEventIdRaw) : undefined;
 
-  const { data, isLoading: isLoadingCategories } = useReadContract({
-    address: eventFactoryAddress,
-    abi: EventFactoryArtifact.abi,
-    functionName: "getAllCategories",
-  });
-
-  const categories = (data as string[]) || undefined;
+  const { data: categoriesRaw, isLoading: isLoadingCategories } =
+    useReadContract({
+      address: eventFactoryAddress,
+      abi: EventFactoryArtifact.abi,
+      functionName: "getAllCategories",
+    });
+  const categories = (categoriesRaw as string[]) || [];
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
@@ -100,67 +94,101 @@ const CreateEventPage = () => {
     },
   });
 
-  const {
-    mutate: createGroup,
-    isPending: isCreatingGroup,
-    data: group,
-  } = useMutation({
+  const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      const response = await axios.post(`/api/groups`, {
+      if (!isConnected) throw new Error("Wallet not connected");
+      if (!nextEventId) throw new Error("Next event ID not available");
+
+      console.log("Creating group...");
+      const groupResponse = await axios.post(`/api/groups`, {
         name: `${data.name} ${nextEventId}`,
       });
-      return response.data.group;
-    },
-    onSuccess: (group) => console.log(`Group created: ${group}`),
-    onError: (error) => {
-      console.error(`Failed to create group: ${error.message}`);
-      toast.error(`Something went wrong`);
-    },
-  });
+      const pinataGroupId = groupResponse.data.group.id;
 
-  const {
-    mutate: uploadEventMetadata,
-    isPending: isUploading,
-    data: metadataCID,
-  } = useMutation({
-    mutationFn: async (data: EventFormData) => {
-      const response = await axios.post(`/api/events/${nextEventId}/metadata`, {
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        date: data.date.toISOString(),
-        location: data.location,
-        ticketPrice: Number(data.ticketPrice),
-        totalTickets: Number(data.totalTickets),
-        pinataGroupId: group.id,
-      });
-      return response.data.cid;
-    },
-    onSuccess: (cid) => console.log(`Metadata uploaded to IPFS: ${cid}`),
-    onError: (error) => {
-      console.error(`Metadata upload failed: ${error.message}`);
-      toast.error(`Something went wrong`);
-    },
-  });
-
-  const {
-    mutate: createTicketMetadata,
-    isPending: isCreatingTicketMetadata,
-    data: ticketCIDs,
-  } = useMutation({
-    mutationFn: async ({
-      tickets,
-    }: {
-      tickets: { tokenId: number; name: string }[];
-    }) => {
-      const response = await axios.post(
-        `/api/events/${nextEventId}/tickets/metadata`,
+      console.log("Uploading event metadata...");
+      const eventResponse = await axios.post(
+        `/api/events/${nextEventId}/metadata`,
         {
-          tickets: tickets,
-          pinataGroupId: group.id,
+          name: data.name,
+          description: data.description,
+          category: data.category,
+          date: data.date.toISOString(),
+          location: data.location,
+          ticketPrice: Number(data.ticketPrice),
+          totalTickets: Number(data.totalTickets),
+          pinataGroupId,
         }
       );
-      return response.data;
+      const metadataCID = eventResponse.data.cid;
+
+      console.log("Uploading ticket(s) metadata...");
+      const tokenIds = Array.from(
+        { length: data.totalTickets },
+        (_, i) => i + 1
+      );
+      const tickets = tokenIds.map((tokenId) => ({
+        tokenId,
+        name: `${data.name} Event #${nextEventId} Ticket #${tokenId}`,
+      }));
+      const ticketResponse = await axios.post(
+        `/api/events/${nextEventId}/tickets/metadata`,
+        {
+          tickets,
+          pinataGroupId,
+        }
+      );
+      const { ticketCIDs } = ticketResponse.data;
+
+      console.log("Creating event on blockchain...");
+      const txHash = await new Promise<string>((resolve, reject) => {
+        writeContract(
+          {
+            address: eventFactoryAddress,
+            abi: EventFactoryArtifact.abi,
+            functionName: "createEvent",
+            args: [
+              metadataCID,
+              pinataGroupId,
+              data.category,
+              data.totalTickets,
+              ethers.parseEther(data.ticketPrice.toString()),
+              tokenIds,
+              ticketCIDs,
+            ],
+          },
+          {
+            onSuccess: resolve,
+            onError: reject,
+          }
+        );
+      });
+
+      return { txHash, eventId: nextEventId, tokenIds, ticketCIDs };
+    },
+    onMutate: () => toast.loading("Processing event creation...", { id: "tx" }),
+    onSuccess: async ({ txHash }) => {
+      if (!receipt) return;
+      const createdEvent = parseEventLogs({
+        abi: EventFactoryArtifact.abi,
+        eventName: "EventCreated",
+        logs: receipt.logs,
+      })[0];
+      const eventId = createdEvent
+        ? Number((createdEvent as any).args.eventId)
+        : null;
+      toast.dismiss("tx");
+      if (eventId) {
+        toast.success(`Event created with ID: ${eventId}`);
+        const graphData = await refetchGraphEvent();
+        console.log("GraphQL event data:", graphData);
+      } else {
+        toast.error("EventCreated not found in receipt logs");
+      }
+      form.reset();
+    },
+    onError: (error) => {
+      toast.dismiss("tx");
+      toast.error(`Event creation failed: ${error.message}`);
     },
   });
 
@@ -174,92 +202,19 @@ const CreateEventPage = () => {
         logs: receipt.logs,
       })[0];
       if (!createdEvent) return null;
-      const eventId = (createdEvent as any).args.eventId.toString();
-      const data = await request(SUBGRAPH_URL, EVENT_QUERY, { eventId });
+      const eventId = Number((createdEvent as any).args.eventId);
+      const data = await request(SUBGRAPH_URL, EVENT_QUERY, {
+        eventId: eventId.toString(),
+      });
       return (data as { eventCreateds: any[] }).eventCreateds[0];
     },
     enabled: false,
     staleTime: 60 * 1000,
   });
 
-  const onSubmit = (data: EventData) => {
-    if (!isConnected) {
-      toast.error("Please, connect your wallet to proceed.");
-      return;
-    }
-
-    if (!nextEventId) {
-      console.error("Failed to fetch next event ID");
-      toast.error("Something went wrong");
-      return;
-    }
-
-    console.log("Creating group...");
-    createGroup(data);
-
-    console.log("Uploading metadata...");
-    uploadEventMetadata(data);
-
-    const tokenIds = Array.from({ length: data.totalTickets }, (_, i) => i + 1);
-    const tickets = tokenIds.map((tokenId) => ({
-      tokenId,
-      name: `${data.name} Event #${nextEventId} Ticket #${tokenId}`,
-    }));
-    createTicketMetadata({ tickets });
-    console.log("Uploading ticket(s) metadata...");
-
-    useEffect(() => {
-      if (metadataCID) {
-        console.log("Creating event on blockchain...");
-        toast.loading("Creating event on blockchain...", { id: "tx" });
-        // const data = form.getValues(); CONFIRM IF IT'S NOT NEEDED ANYMORE
-        writeContract({
-          address: eventFactoryAddress,
-          abi: EventFactoryArtifact.abi,
-          functionName: "createEvent",
-          args: [
-            metadataCID,
-            data.pinataGroupId,
-            data.category,
-            data.totalTickets,
-            ethers.parseEther(data.ticketPrice.toString()),
-            tokenIds,
-            ticketCIDs,
-          ],
-        });
-      }
-    }, [metadataCID, writeContract, form]);
-
-    form.reset();
+  const onSubmit = (data: EventFormData) => {
+    createEventMutation.mutate(data);
   };
-
-  useEffect(() => {
-    if (isTxPending) toast.loading("Transaction pending...", { id: "tx" });
-  }, [isTxPending]);
-
-  useEffect(() => {
-    if (receipt) {
-      toast.dismiss("tx");
-      const createdEvent = parseEventLogs({
-        abi: EventFactoryArtifact.abi,
-        eventName: "EventCreated",
-        logs: receipt.logs,
-      })[0];
-
-      if (createdEvent) {
-        const eventId = (createdEvent as any).args.eventId.toString();
-        toast.success(`Event created with ID: ${eventId}`);
-        uploadEventMetadata({ ...form.getValues() });
-        refetchGraphEvent();
-      } else {
-        toast.error("EventCreated not found in receipt logs");
-      }
-    }
-    if (writeError) {
-      toast.dismiss("tx");
-      toast.error(`Event creation failed: ${writeError.message}`);
-    }
-  }, [receipt, writeError, form, uploadEventMetadata, refetchGraphEvent]);
 
   return (
     <div className="container mx-auto py-10">
@@ -308,7 +263,7 @@ const CreateEventPage = () => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {categories?.map((category) => (
+                    {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -380,7 +335,11 @@ const CreateEventPage = () => {
               <FormItem>
                 <FormLabel>Ticket Price</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter the ticket price" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="Enter the ticket price"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -393,7 +352,11 @@ const CreateEventPage = () => {
               <FormItem>
                 <FormLabel>Total Tickets</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter the total tickets" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="Enter the total tickets"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -404,21 +367,13 @@ const CreateEventPage = () => {
             size="lg"
             disabled={
               isLoadingCategories ||
-              isCreatingGroup ||
               isNextIdLoading ||
               isTxPending ||
               isPending ||
-              isUploading
+              createEventMutation.isPending
             }
           >
-            {isLoadingCategories ||
-            isCreatingGroup ||
-            isNextIdLoading ||
-            isTxPending ||
-            isPending ||
-            isUploading
-              ? "Processing..."
-              : "Create Event"}
+            {createEventMutation.isPending ? "Processing..." : "Create Event"}
           </Button>
         </form>
       </Form>
