@@ -56,6 +56,7 @@ const eventFactoryAddress = deployedAddresses[
 
 const CreateEventPage = () => {
   const { isConnected } = useAccount();
+
   const {
     writeContract,
     data: hash,
