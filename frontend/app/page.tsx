@@ -55,7 +55,9 @@ export default function Home() {
       ticketPrice: 0.03, // ETH price
     },
   ];
+
   const router = useRouter();
+
   return (
     <div className="container mx-auto py-10">
       <Heading title="Upcoming Events" />
