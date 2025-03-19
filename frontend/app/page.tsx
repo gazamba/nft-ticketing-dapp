@@ -54,6 +54,14 @@ export default function Home() {
       location: "Palais des Congrès, Paris",
       ticketPrice: 0.03, // ETH price
     },
+    {
+      id: 6,
+      name: "Metaverse Expo",
+      description: "An expo exploring the latest in metaverse technology.",
+      date: "Monday, November 17, 2025",
+      location: "Moscone Center, San Francisco",
+      ticketPrice: 0.04, // ETH price
+    },
   ];
 
   const router = useRouter();
