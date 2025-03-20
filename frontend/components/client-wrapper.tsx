@@ -28,7 +28,9 @@ export default function ClientWrapper({
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
   if (!isMounted) return;
+
   const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
