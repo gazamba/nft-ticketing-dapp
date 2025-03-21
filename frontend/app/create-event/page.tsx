@@ -63,6 +63,7 @@ const CreateEventPage = () => {
     error: writeError,
     isPending: isTxPending,
   } = useWriteContract();
+
   const { data: receipt, isLoading: isPending } = useWaitForTransactionReceipt({
     hash,
   });
