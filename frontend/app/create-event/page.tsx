@@ -81,6 +81,7 @@ const CreateEventPage = () => {
       abi: EventFactoryArtifact.abi,
       functionName: "getAllCategories",
     });
+
   const categories = (categoriesRaw as string[]) || [];
 
   const form = useForm<EventFormData>({
