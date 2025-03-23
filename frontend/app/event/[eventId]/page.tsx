@@ -14,6 +14,7 @@ interface EventDetailPageProps {
 }
 const EventDetailPage = ({ params }: EventDetailPageProps) => {
   // use params.eventId to fetch real event.
+
   const event = {
     id: 1,
     name: "Web 3 Conference",
