@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ThemeToggle } from "./theme-toggle";
 import { useState } from "react";
-import { Menu, X } from "lucide-react"; // You'll need to install lucide-react for the icons
+import { Menu, X } from "lucide-react";
 
 const NavBar = () => {
   const pathname = usePathname();
@@ -32,7 +32,6 @@ const NavBar = () => {
         </Link>
       </div>
 
-      {/* Hamburger button - visible only on mobile */}
       <button
         className="md:hidden ml-auto"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -40,7 +39,6 @@ const NavBar = () => {
         {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Desktop Navigation */}
       <div className="hidden md:flex ml-auto items-center">
         <ul className="flex items-center space-x-4 text-xl">
           {routes.map((item) => (
@@ -70,7 +68,6 @@ const NavBar = () => {
         </ul>
       </div>
 
-      {/* Mobile Menu - shown when hamburger is clicked */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 right-0 bg-white border-b border-slate-300 z-50">
           <ul className="flex flex-col p-4 space-y-4 text-xl">
@@ -110,7 +107,6 @@ const NavBar = () => {
         </div>
       )}
 
-      {/* Theme Toggle - adjust positioning as needed */}
       <div className="hidden md:block ml-4">
         <ThemeToggle />
       </div>
