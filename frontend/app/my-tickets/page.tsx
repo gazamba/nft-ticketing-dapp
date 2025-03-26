@@ -34,6 +34,14 @@ const MyTicketsPage = () => {
       location: "Olympia, London",
       ticketPrice: 0.037, // ETH price
     },
+    {
+      id: 3,
+      name: "NFT Summit",
+      description: "An event dedicated to the latest trends in NFTs.",
+      date: "Monday, August 20, 2025",
+      location: "Marina Bay Sands, Singapore",
+      ticketPrice: 0.045, // ETH price
+    },
   ];
 
   return (
